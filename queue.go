@@ -8,6 +8,16 @@ type Queue struct {
 	m  map[string]*call // lazily initialized
 }
 
+// Size returns the number of keys currently locked in the queue. This is directly proportional to the
+// size of the queue's underlying datastructure, independent of how many goroutines are waiting for
+// those locks. This is also equal to the number of queued calls that are currently either executing
+// (not waiting to execute) or releasing locks just after completing execution.
+func (q *Queue) Size() int {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return len(q.m)
+}
+
 // Do executes the given function, making sure that only one execution runs at a time for a given key.
 // If new calls come in for the same key, they wait for the caller at the head of the queue to finish
 // before running.
